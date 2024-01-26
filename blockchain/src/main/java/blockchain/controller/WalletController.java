@@ -1,8 +1,8 @@
-package wallet.controller;
+package blockchain.controller;
 
 import dtos.SendFunds;
 
-import wallet.service.WalletService;
+import blockchain.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

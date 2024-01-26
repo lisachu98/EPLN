@@ -1,12 +1,16 @@
-package wallet.service;
+package blockchain.service;
 
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 
+import blockchain.util.StringUtil;
+import com.google.gson.Gson;
 import jakarta.annotation.PostConstruct;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import wallet.model.Transaction;
+import blockchain.model.Transaction;
 
 @Service
 public class WalletService {
@@ -14,12 +18,14 @@ public class WalletService {
     private PrivateKey privateKey;
     private PublicKey publicKey;
     private float balance;
+    @Autowired
+    private SimpMessagingTemplate template;
 
     @PostConstruct
-    public void initializeWallet(String accountId) {
-        this.accountId = accountId;
+    public void initializeWallet() {
         this.balance = 0;
         generateKeyPair();
+        this.accountId = StringUtil.getStringFromKey(publicKey);
         System.out.println("Wallet initialized");
     }
 
@@ -76,7 +82,9 @@ public class WalletService {
         if (!debitSuccessful) {
             return null;
         }
-
+        String transactionJson = StringUtil.getJson(transaction);
+        template.convertAndSend("/topic/transaction", transactionJson);
+        System.out.println("Transaction sent to " + StringUtil.getStringFromKey(receiver) + " from " + StringUtil.getStringFromKey(publicKey) + " for " + amount + " coins");
         return transaction;
     }
 

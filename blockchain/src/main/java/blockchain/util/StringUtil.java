@@ -1,5 +1,8 @@
 package blockchain.util;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.security.*;
 import java.util.Base64;
 
@@ -58,5 +61,14 @@ public class StringUtil {
 
     public static String getStringFromKey(Key key) {
         return Base64.getEncoder().encodeToString(key.getEncoded());
+    }
+
+    public static String getJson(Object o) {
+        return new GsonBuilder().setPrettyPrinting().create().toJson(o);
+    }
+
+    public static <T> T getObjectFromJson(String json, Class<T> clazz) {
+        Gson gson = new Gson();
+        return gson.fromJson(json, clazz);
     }
 }
