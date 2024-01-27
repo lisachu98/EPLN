@@ -8,14 +8,14 @@ import java.util.Date;
 
 public class Transaction {
     private String transactionId;
-    private PublicKey sender;
-    private PublicKey receiver;
+    private String sender;
+    private String receiver;
     private float amount;
     private long timestamp;
     private byte[] signature;
     private static int sequence = 0;
 
-    public Transaction(PublicKey sender, PublicKey receiver, float amount) {
+    public Transaction(String sender, String receiver, float amount) {
         this.sender = sender;
         this.receiver = receiver;
         this.amount = amount;
@@ -26,21 +26,27 @@ public class Transaction {
     private String calculateTransactionId() {
         sequence++;
         return StringUtil.applySha256(
-                StringUtil.getStringFromKey(sender) +
-                        StringUtil.getStringFromKey(receiver) +
+                sender +
+                        receiver +
                         Float.toString(amount) +
                         Long.toString(timestamp) + sequence
         );
     }
 
     public void generateSignature(PrivateKey privateKey) {
-        String data = StringUtil.getStringFromKey(sender) + StringUtil.getStringFromKey(receiver) + Float.toString(amount) + Long.toString(timestamp);
+        String data = sender + receiver + Float.toString(amount) + Long.toString(timestamp);
         signature = StringUtil.applyECDSASig(privateKey,data);
     }
 
     public boolean verifySignature() {
-        String data = StringUtil.getStringFromKey(sender) + StringUtil.getStringFromKey(receiver) + Float.toString(amount) + Long.toString(timestamp);
-        return StringUtil.verifyECDSASig(sender, data, signature);
+        String data = sender + receiver + Float.toString(amount) + Long.toString(timestamp);
+        PublicKey senderPub = null;
+        try {
+            senderPub = StringUtil.getPublicKeyFromString(this.sender);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return StringUtil.verifyECDSASig(senderPub, data, signature);
     }
 
     public boolean processTransaction() {
@@ -53,5 +59,13 @@ public class Transaction {
 
     public String getTransactionId() {
         return transactionId;
+    }
+
+    public String getReceiver() {
+        return receiver;
+    }
+
+    public float getAmount() {
+        return amount;
     }
 }

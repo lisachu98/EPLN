@@ -1,28 +1,22 @@
-package blockchain.service;
+package blockchain.model;
 
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 
 import blockchain.util.StringUtil;
-import com.google.gson.Gson;
 import jakarta.annotation.PostConstruct;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import blockchain.model.Transaction;
 
-@Service
-public class WalletService {
+public class Wallet {
     private String accountId;
     private PrivateKey privateKey;
     private PublicKey publicKey;
     private float balance;
-    @Autowired
-    private SimpMessagingTemplate template;
 
-    @PostConstruct
-    public void initializeWallet() {
+    public Wallet() {
         this.balance = 0;
         generateKeyPair();
         this.accountId = StringUtil.getStringFromKey(publicKey);
@@ -54,12 +48,12 @@ public class WalletService {
     }
 
     public void generateKeyPair(){
-        Security.addProvider(new BouncyCastleProvider());
+        //Security.addProvider(new BouncyCastleProvider());
         try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ECDSA");
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
             SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-            ECGenParameterSpec ecSpec = new ECGenParameterSpec("prime192v1");
-            keyGen.initialize(ecSpec, random);
+            ECGenParameterSpec ecSpec = new ECGenParameterSpec("secp256r1");
+            keyGen.initialize(256, random);
             KeyPair keyPair = keyGen.generateKeyPair();
             privateKey = keyPair.getPrivate();
             publicKey = keyPair.getPublic();
@@ -68,27 +62,11 @@ public class WalletService {
         }
     }
 
-    public Transaction sendFunds(PublicKey receiver, float amount) {
-        if (getBalance() < amount) {
-            System.out.println("Insufficient funds");
-            return null;
-        }
-
-        Transaction transaction = new Transaction(publicKey, receiver, amount);
-        transaction.generateSignature(privateKey);
-
-        boolean debitSuccessful = debit(amount);
-
-        if (!debitSuccessful) {
-            return null;
-        }
-        String transactionJson = StringUtil.getJson(transaction);
-        template.convertAndSend("/topic/transaction", transactionJson);
-        System.out.println("Transaction sent to " + StringUtil.getStringFromKey(receiver) + " from " + StringUtil.getStringFromKey(publicKey) + " for " + amount + " coins");
-        return transaction;
-    }
-
     public PublicKey getPublicKey() {
         return publicKey;
+    }
+
+    public PrivateKey getPrivateKey() {
+        return privateKey;
     }
 }

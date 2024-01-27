@@ -17,7 +17,14 @@ public class Block {
         this.transactions = new ArrayList();
         this.previousHash = previousHash;
         this.timeStamp = new Date().getTime();
-        this.hash = calculateHash();
+    }
+
+    public Block() {
+        this.transactions = new ArrayList<>();
+        this.previousHash = "0";
+        this.timeStamp = 2137L;
+        this.hash = "21372137";
+        nonce = 0;
     }
 
     public String calculateHash(){
@@ -40,13 +47,13 @@ public class Block {
         return buffer.toString();
     }
 
-    public String mineBlock(int prefix) {
-        String prefixString = new String(new char[prefix]).replace('\0', '0');
-        while (!hash.substring(0, prefix).equals(prefixString)) {
-            nonce++;
-            hash = calculateHash();
-        }
-        return hash;
+    public void mineBlock() {
+//        String prefixString = new String(new char[prefix]).replace('\0', '0');
+//        while (!hash.substring(0, prefix).equals(prefixString)) {
+//            nonce++;
+//            hash = calculateHash();
+//        }
+        this.hash = calculateHash();
     }
 
     public String getHash() {
@@ -55,5 +62,9 @@ public class Block {
 
     public String getPreviousHash() {
         return previousHash;
+    }
+
+    public void setTransactions(ArrayList<Transaction> transactions) {
+        this.transactions = transactions;
     }
 }
