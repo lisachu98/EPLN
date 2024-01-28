@@ -63,11 +63,13 @@ public class BlockchainService {
         blockchain.add(genesis);
     }
 
-    public void prooffOfAuthority(){
+    public void proofOfAuthority(){
         long seed = blockchain.get(blockchain.size() - 1).getHash().hashCode();
         Random random = new Random(seed);
         int randomInt = random.nextInt(nodes.size());
-        List<String> nodesList = new ArrayList<>(nodes);
+        Set<String> nodesTmp = nodes;
+        nodesTmp.remove("centralbank");
+        List<String> nodesList = new ArrayList<>(nodesTmp);
         if (nodesList.get(randomInt).equalsIgnoreCase(name)) {
             System.out.println("I'm the validator!");
             Block block = mintBlock();
@@ -113,7 +115,7 @@ public class BlockchainService {
         mempool.add(transaction);
         System.out.println("Transaction added");
         if(mempool.size() == 5){
-            prooffOfAuthority();
+            proofOfAuthority();
             mempool.clear();
         }
     }
