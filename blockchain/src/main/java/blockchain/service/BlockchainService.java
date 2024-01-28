@@ -24,8 +24,9 @@ import org.springframework.stereotype.Service;
 public class BlockchainService {
     private String name;
     private int port;
-    private ArrayList<Block> blockchain;
+    private ArrayList<Block> blockchain, centralchain;
     private ArrayList<Wallet> wallets;
+    private Wallet wallet;
     private ArrayList<Transaction> mempool;
     @Autowired
     private SimpMessagingTemplate template;
@@ -44,6 +45,10 @@ public class BlockchainService {
         this.mempool = new ArrayList<>();
         this.name = environment.getProperty("spring.application.name");
         this.nodes = new HashSet<>();
+        this.wallet = new Wallet(this.name.toLowerCase());
+        this.centralchain = new ArrayList<>();
+        Block genesis = new Block();
+        centralchain.add(genesis);
         //this.port = Integer.parseInt(Objects.requireNonNull(environment.getProperty("local.server.port")));
 
         Wallet wallet1 = new Wallet();
@@ -88,6 +93,11 @@ public class BlockchainService {
         System.out.println("Block added and blockchain is valid: " + isChainValid());
     }
 
+    public void addCentralBlock(Block block) {
+        centralchain.add(block);
+        System.out.println("Central block added and central blockchain is valid: " + isChainValid());
+    }
+
     public void addTransaction(Transaction transaction) {
         PublicKey receiver = null;
         try {
@@ -105,6 +115,13 @@ public class BlockchainService {
         if(mempool.size() == 5){
             prooffOfAuthority();
             mempool.clear();
+        }
+    }
+
+    public void addCentralTransaction(Transaction transaction) {
+        if (transaction.getReceiver().equalsIgnoreCase(name)) {
+            wallet.credit(transaction.getAmount());
+            System.out.println("Got " + transaction.getAmount() + " coins from " + transaction.getSender());
         }
     }
 

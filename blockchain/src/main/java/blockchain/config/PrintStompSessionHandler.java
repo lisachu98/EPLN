@@ -36,12 +36,23 @@ public class PrintStompSessionHandler extends StompSessionHandlerAdapter {
             case "/topic/transactions":
                 handleTransaction(payload);
                 break;
+            case "/topic/centralblocks":
+                handleCentralBlock(payload);
+                break;
+            case "/topic/centraltransactions":
+                handleCentralTransaction(payload);
+                break;
         }
     }
 
     private void handleBlock(Object payload) {
         Block block = StringUtil.getObjectFromJson(payload.toString(), Block.class);
         blockchainService.addBlock(block);
+    }
+
+    private void handleCentralBlock(Object payload) {
+        Block block = StringUtil.getObjectFromJson(payload.toString(), Block.class);
+        blockchainService.addCentralBlock(block);
     }
 
     private void handleTransaction(Object payload) {
@@ -54,11 +65,24 @@ public class PrintStompSessionHandler extends StompSessionHandlerAdapter {
         }
     }
 
+    private void handleCentralTransaction(Object payload) {
+        try {
+            Transaction transaction = StringUtil.getObjectFromJson(payload.toString(), Transaction.class);
+            blockchainService.addCentralTransaction(transaction);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
         session.subscribe("/topic/transactions", this);
         System.out.println("Subscribed to /topic/transactions");
         session.subscribe("/topic/blocks", this);
         System.out.println("Subscribed to /topic/blocks");
+        session.subscribe("/topic/centraltransactions", this);
+        System.out.println("Subscribed to /topic/centraltransactions");
+        session.subscribe("/topic/centralblocks", this);
+        System.out.println("Subscribed to /topic/centralblocks");
     }
 }

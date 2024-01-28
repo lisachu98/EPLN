@@ -1,14 +1,9 @@
-package blockchain.model;
+package centralbank.model;
+
+import centralbank.util.StringUtil;
 
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
-
-import blockchain.util.StringUtil;
-import jakarta.annotation.PostConstruct;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Service;
 
 public class Wallet {
     private String accountId;
@@ -54,7 +49,6 @@ public class Wallet {
     }
 
     public void generateKeyPair(){
-        //Security.addProvider(new BouncyCastleProvider());
         try {
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
             SecureRandom random = SecureRandom.getInstance("SHA1PRNG");

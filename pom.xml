@@ -12,6 +12,7 @@
     <module>blockchain</module>
     <module>discovery-server</module>
       <module>dtos</module>
+      <module>central-bank</module>
   </modules>
 
   <parent>

@@ -1,6 +1,6 @@
-package blockchain.model;
+package centralbank.model;
 
-import blockchain.util.StringUtil;
+import centralbank.util.StringUtil;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
