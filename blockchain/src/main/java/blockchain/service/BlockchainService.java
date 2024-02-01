@@ -82,7 +82,8 @@ public class BlockchainService {
 
     public Block mintBlock() {
         Block block = new Block(blockchain.get(blockchain.size() - 1).getHash());
-        block.setTransactions(mempool);
+        ArrayList<Transaction> blockTransactions = new ArrayList<>(mempool);
+        block.setTransactions(blockTransactions);
         block.mineBlock();
         return block;
     }
@@ -98,7 +99,7 @@ public class BlockchainService {
 
     public void addCentralBlock(Block block) {
         centralchain.add(block);
-        System.out.println("Central block added and central blockchain is valid: " + isChainValid());
+        System.out.println("Central block added and central blockchain is valid: " + isCentralChainValid());
     }
 
     public void addTransaction(Transaction transaction) {
@@ -132,6 +133,22 @@ public class BlockchainService {
         for (int i = 1; i < blockchain.size(); i++) {
             Block currentBlock = blockchain.get(i);
             Block previousBlock = blockchain.get(i - 1);
+
+            if (!currentBlock.getHash().equals(currentBlock.calculateHash())) {
+                return false;
+            }
+
+            if (!previousBlock.getHash().equals(currentBlock.getPreviousHash())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isCentralChainValid() {
+        for (int i = 1; i < centralchain.size(); i++) {
+            Block currentBlock = centralchain.get(i);
+            Block previousBlock = centralchain.get(i - 1);
 
             if (!currentBlock.getHash().equals(currentBlock.calculateHash())) {
                 return false;

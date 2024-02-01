@@ -23,8 +23,8 @@ public class Block {
         this.transactions = new ArrayList<>();
         this.previousHash = "0";
         this.timeStamp = 2137L;
-        this.hash = "21372137";
-        nonce = 0;
+        this.nonce = 0;
+        this.hash = calculateHash();
     }
 
     public String calculateHash(){

@@ -64,7 +64,8 @@ public class CentralBankService {
 
     public Block mintBlock() {
         Block block = new Block(blockchain.get(blockchain.size() - 1).getHash());
-        block.setTransactions(mempool);
+        ArrayList<Transaction> blockTransactions = new ArrayList<>(mempool);
+        block.setTransactions(blockTransactions);
         block.mineBlock();
         return block;
     }
@@ -115,7 +116,7 @@ public class CentralBankService {
             //System.out.println("Already connected to " + nodeUrl);
             return;
         }
-        banks.add(nodeName);
+        if (!nodeName.equals("centralbank")) banks.add(nodeName);
         WebSocketClient webSocketClient = new WebSocketClient(nodeUrl, new PrintStompSessionHandler(this));
         webSocketClients.put(nodeUrl, webSocketClient);
     }
