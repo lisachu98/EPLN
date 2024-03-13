@@ -73,6 +73,9 @@ public class CentralBankService {
     public int getMempool() {
         return mempool.size();
     }
+    public ArrayList<Transaction> getMempoolTransactions() {
+        return mempool;
+    }
 
     public void addTransaction(Transaction transaction) {
         if (transaction.getReceiver().equalsIgnoreCase(this.name)) wallet.credit(transaction.getAmount());
@@ -131,5 +134,14 @@ public class CentralBankService {
                 connectToNode(nodeUrl, instance.getServiceId().toLowerCase());
             }
         }
+    }
+    public String getPublicKey() {
+        return wallet.getAccountId();
+    }
+    public float getBalance() {
+        return wallet.getBalance();
+    }
+    public ArrayList<Block> getBlockchain() {
+        return blockchain;
     }
 }

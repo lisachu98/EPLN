@@ -91,6 +91,9 @@ public class BlockchainService {
     public int getMempool() {
         return mempool.size();
     }
+    public ArrayList<Transaction> getMempoolTransactions() {
+        return mempool;
+    }
 
     public void addBlock(Block block) {
         blockchain.add(block);
@@ -204,6 +207,47 @@ public class BlockchainService {
         return transaction;
     }
 
+    public Transaction sendBankFunds(String senderPubStr, String senderPriStr, String receiverStr, float amount) {
+        Wallet senderWallet;
+        if (senderPubStr.equals(wallet.getAccountId())) {
+            senderWallet = wallet;
+            if (senderWallet.getBalance() < amount) {
+                System.out.println("Insufficient funds");
+                return null;
+            }
+        }else return null;
+
+        Transaction transaction = new Transaction(senderPubStr, receiverStr, amount);
+
+        boolean debitSuccessful = senderWallet.debit(amount);
+
+        if (!debitSuccessful) {
+            return null;
+        }
+        String transactionJson = StringUtil.getJson(transaction);
+        template.convertAndSend("/topic/centraltransactions", transactionJson);
+        System.out.println("Transaction sent to " + receiverStr + " from " + senderPubStr + " for " + amount + " coins");
+        return transaction;
+    }
+
+    public boolean authenticate(String publicKey, String privateKey) {
+        PublicKey pubKey;
+        PrivateKey priKey;
+        try {
+            pubKey = StringUtil.getPublicKeyFromString(publicKey);
+            priKey = StringUtil.getPrivateKeyFromString(privateKey);
+        } catch (Exception e) {
+            System.out.println("Error processing keys: " + e.getMessage());
+            return false;
+        }
+        for (Wallet wallet : wallets) {
+            if (wallet.getPublicKey().equals(pubKey) && wallet.getPrivateKey().equals(priKey)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void connectToNode(String nodeUrl) {
         if (webSocketClients.containsKey(nodeUrl)) {
             //System.out.println("Already connected to " + nodeUrl);
@@ -223,5 +267,31 @@ public class BlockchainService {
                 connectToNode(nodeUrl);
             }
         }
+    }
+    public String getName() {
+        return name;
+    }
+    public float getWalletBalance(String publicKey) {
+        PublicKey pubKey;
+        try {
+            pubKey = StringUtil.getPublicKeyFromString(publicKey);
+        } catch (Exception e) {
+            System.out.println("Error processing keys: " + e.getMessage());
+            return 0;
+        }
+        Wallet wallet = findWalletByPublicKey(pubKey);
+        if (wallet == null) {
+            return 0;
+        }
+        return wallet.getBalance();
+    }
+    public String getPublicKey() {
+        return wallet.getAccountId();
+    }
+    public float getBalance() {
+        return wallet.getBalance();
+    }
+    public ArrayList<Block> getBlockchain() {
+        return blockchain;
     }
 }

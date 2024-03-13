@@ -1,28 +1,55 @@
 package centralbank.controller;
 
-import centralbank.model.Transaction;
+import centralbank.model.Block;
 import centralbank.service.CentralBankService;
-import centralbank.util.StringUtil;
 import dtos.SendFunds;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.ArrayList;
 
 @Controller
-@RequestMapping("/blockchain")
 public class CentralBankController {
     @Autowired
     private CentralBankService centralBankService;
 
-    @PostMapping("/issueFunds")
-    public ResponseEntity<String> sendFunds(@RequestBody SendFunds request) {
-        centralBankService.issueFunds(request.getAmount());
-        return ResponseEntity.ok("Funds issued");
+//    @PostMapping("/blockchain/issueFunds")
+//    public ResponseEntity<String> sendFunds(@RequestBody SendFunds request) {
+//        centralBankService.issueFunds(request.getAmount());
+//        return ResponseEntity.ok("Funds issued");
+//    }
+    @PostMapping("/blockchain/issueFunds")
+    public String sendFunds(@RequestParam("amount") float amount){
+        centralBankService.issueFunds(amount);
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/authenticate")
+    public String authenticate(@RequestParam("publicKey") String publicKey, @RequestParam("privateKey") String privateKey, Model model, RedirectAttributes redirectAttributes, HttpSession session) {
+        if (publicKey.equals("admin") && privateKey.equals("admin")) {
+            model.addAttribute("success", "Login successful.");
+            return "redirect:/admin";
+        }
+        return "redirect:/";
+    }
+
+    @GetMapping("/")
+    public String login(Model model) {
+        return "login";
+    }
+    @GetMapping("/admin")
+    public String admin(Model model, HttpSession session) {
+        model.addAttribute("publicKey", (String) session.getAttribute("publicKey"));
+        model.addAttribute("balance", centralBankService.getBalance());
+        ArrayList<Block> blockchain = centralBankService.getBlockchain();
+        model.addAttribute("blockchain", blockchain);
+        model.addAttribute("mempoolSize", centralBankService.getMempool());
+        model.addAttribute("mempool", centralBankService.getMempoolTransactions());
+        return "admin";
     }
 }

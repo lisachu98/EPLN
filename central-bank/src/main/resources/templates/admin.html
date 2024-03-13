@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Account</title>
+    <style>
+        .block, .mempool-transaction {
+            display: inline-block;
+            border: 1px solid black;
+            margin: 10px;
+            padding: 10px;
+        }
+        th {
+            text-align: left;
+        }
+        .hash-line {
+            border-top: 1px solid black;
+        }
+    </style>
+    <script>
+        function submitToOtherEndpoint(event) {
+            event.preventDefault();
+            var form = document.getElementById('transactionForm');
+            form.action = '/blockchain/sendBankFunds';
+            form.submit();
+        }
+    </script>
+</head>
+<body>
+<h1>Central Bank</h1>
+<form th:action="@{/blockchain/issueFunds}" method="post">
+    <label for="amount">Amount:</label><br>
+    <input type="number" id="amount" name="amount" min="0"><br>
+    <input type="submit" value="Issue funds">
+</form>
+<h1>Mempool</h1>
+<p>Size: <span th:text="${mempoolSize}"></span>/5</p>
+<div th:each="transaction : ${mempool}" class="mempool-transaction">
+    <table>
+        <tr>
+            <th>Transaction</th>
+            <td><span th:text="${transaction.transactionId}"></span></td>
+        </tr>
+        <tr>
+            <th>Sender</th>
+            <td><span th:text="${transaction.sender}"></span></td>
+        </tr>
+        <tr>
+            <th>Recipient</th>
+            <td><span th:text="${transaction.receiver}"></span></td>
+        </tr>
+        <tr>
+            <th>Amount</th>
+            <td><span th:text="${transaction.amount}"></span></td>
+        </tr>
+    </table>
+</div>
+<h1>Blockchain</h1>
+<div th:each="block : ${blockchain}" class="block">
+    <table>
+        <tr>
+            <th>Block</th>
+            <td><span th:text="${block.hash}"></span></td>
+        </tr>
+        <tr class="hash-line">
+            <td colspan="2"></td>
+        </tr>
+        <tr>
+            <th>Previous block</th>
+            <td><span th:text="${block.previousHash}"></span></td>
+        </tr>
+        <tr>
+            <th>Timestamp</th>
+            <td><span th:text="${block.getTimestamp}"></span></td>
+        </tr>
+        <tr th:each="transaction : ${block.getTransactions}">
+            <th>Transaction <span th:text="${transaction.transactionId}"></span></th>
+            <td>
+                <p>Sender: <span th:text="${transaction.sender}"></span></p>
+                <p>Recipient: <span th:text="${transaction.receiver}"></span></p>
+                <p>Amount: <span th:text="${transaction.amount}"></span></p>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

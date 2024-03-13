@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Account</title>
+</head>
+<body>
+<h1>Account: <span th:text="${publicKey}"></span></h1>
+<p>Your balance: <span th:text="${balance}"></span></p>
+<form th:action="@{/blockchain/sendFunds}" method="post">
+    <label for="receiverPublicKey">Receiver's Public Key:</label><br>
+    <input type="text" id="receiverPublicKey" name="receiverPublicKey"><br>
+    <label for="privateKey">Your Private Key:</label><br>
+    <input type="text" id="privateKey" name="privateKey"><br>
+    <label for="amount">Amount:</label><br>
+    <input type="number" id="amount" name="amount" min="0"><br>
+    <input type="hidden" id="senderPublicKey" name="senderPublicKey" th:value="${publicKey}">
+    <input type="submit" value="Send">
+</form>
+</body>
+</html>

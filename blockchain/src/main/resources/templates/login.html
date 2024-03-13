@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <h1 th:text="${serviceName} + ' Login'"></h1>
+    <form th:action="@{/authenticate}" method="post">
+        <label for="publicKey">Public Key:</label><br>
+        <input type="text" id="publicKey" name="publicKey"><br>
+        <label for="privateKey">Private Key:</label><br>
+        <input type="text" id="privateKey" name="privateKey"><br>
+        <input type="submit" value="Login">
+        <div th:if="${error}" th:text="${error}" class="alert alert-danger"></div>
+        <div th:if="${success}" th:text="${success}" class="alert alert-success"></div>
+    </form>
+</body>
+</html>

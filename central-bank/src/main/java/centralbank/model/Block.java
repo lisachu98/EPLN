@@ -67,4 +67,11 @@ public class Block {
     public void setTransactions(ArrayList<Transaction> transactions) {
         this.transactions = transactions;
     }
+
+    public long getTimestamp() {
+        return this.timeStamp;
+    }
+    public ArrayList<Transaction> getTransactions() {
+        return transactions;
+    }
 }
