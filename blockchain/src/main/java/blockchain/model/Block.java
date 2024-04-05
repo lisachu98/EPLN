@@ -11,7 +11,6 @@ public class Block {
     private String previousHash;
     private ArrayList<Transaction> transactions;
     private long timeStamp;
-    private int nonce;
 
     public Block(String previousHash){
         this.transactions = new ArrayList();
@@ -23,12 +22,11 @@ public class Block {
         this.transactions = new ArrayList<>();
         this.previousHash = "0";
         this.timeStamp = 2137L;
-        this.nonce = 0;
         this.hash = calculateHash();
     }
 
     public String calculateHash(){
-        String hashData = previousHash + Long.toString(timeStamp) + Integer.toString(nonce);
+        String hashData = previousHash + Long.toString(timeStamp);
         for (Transaction transaction : transactions) {
             hashData += transaction.getTransactionId();
         }
@@ -48,11 +46,6 @@ public class Block {
     }
 
     public void mineBlock() {
-//        String prefixString = new String(new char[prefix]).replace('\0', '0');
-//        while (!hash.substring(0, prefix).equals(prefixString)) {
-//            nonce++;
-//            hash = calculateHash();
-//        }
         this.hash = calculateHash();
     }
 
@@ -67,6 +60,7 @@ public class Block {
     public void setTransactions(ArrayList<Transaction> transactions) {
         this.transactions = transactions;
     }
+
     public long getTimestamp() {
         return this.timeStamp;
     }

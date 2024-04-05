@@ -24,8 +24,8 @@ public class CentralBankController {
 //        return ResponseEntity.ok("Funds issued");
 //    }
     @PostMapping("/blockchain/issueFunds")
-    public String sendFunds(@RequestParam("amount") float amount){
-        centralBankService.issueFunds(amount);
+    public String sendFunds(@RequestParam("amount") float amount, @RequestParam("banks") ArrayList<String> banks) {
+        centralBankService.issueFunds(amount, banks);
         return "redirect:/admin";
     }
 
@@ -50,6 +50,8 @@ public class CentralBankController {
         model.addAttribute("blockchain", blockchain);
         model.addAttribute("mempoolSize", centralBankService.getMempool());
         model.addAttribute("mempool", centralBankService.getMempoolTransactions());
+        model.addAttribute("banks", centralBankService.getBanks());
+        System.out.println("Banks: " + centralBankService.getBanks());
         return "admin";
     }
 }

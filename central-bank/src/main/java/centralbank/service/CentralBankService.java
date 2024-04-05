@@ -104,8 +104,8 @@ public class CentralBankService {
         return true;
     }
 
-    public void issueFunds(float amount) {
-        for (String bank : banks) {
+    public void issueFunds(float amount, ArrayList<String> receivers) {
+        for (String bank : receivers) {
             Transaction transaction = new Transaction("Central Bank", bank, amount);
             String transactionJson = StringUtil.getJson(transaction);
             template.convertAndSend("/topic/centraltransactions", transactionJson);
@@ -143,5 +143,8 @@ public class CentralBankService {
     }
     public ArrayList<Block> getBlockchain() {
         return blockchain;
+    }
+    public ArrayList<String> getBanks() {
+        return banks;
     }
 }

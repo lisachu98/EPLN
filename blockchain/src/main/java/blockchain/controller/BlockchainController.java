@@ -82,7 +82,7 @@ public class BlockchainController {
             return "redirect:/account";
         } else {
             System.out.println("Redirecting to login page");
-            redirectAttributes.addFlashAttribute("error", "Invalid keys. Please try again.");
+            redirectAttributes.addFlashAttribute("error", "Wrong credentials. Please try again.");
             return "redirect:/";
         }
     }
@@ -103,6 +103,7 @@ public class BlockchainController {
         model.addAttribute("publicKey", (String) session.getAttribute("publicKey"));
         model.addAttribute("balance", blockchainService.getBalance());
         ArrayList<Block> blockchain = blockchainService.getBlockchain();
+        model.addAttribute("name", blockchainService.getName());
         model.addAttribute("blockchain", blockchain);
         model.addAttribute("mempoolSize", blockchainService.getMempool());
         model.addAttribute("mempool", blockchainService.getMempoolTransactions());
