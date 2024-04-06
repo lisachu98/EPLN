@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class BlockchainService {
     private String name;
-    private int port;
     private ArrayList<Block> blockchain, centralchain;
     private ArrayList<Wallet> wallets;
     private Wallet wallet;
@@ -49,8 +48,6 @@ public class BlockchainService {
         this.centralchain = new ArrayList<>();
         Block genesis = new Block();
         centralchain.add(genesis);
-        //this.port = Integer.parseInt(Objects.requireNonNull(environment.getProperty("local.server.port")));
-
         Wallet wallet1 = new Wallet();
         wallet1.setBalance(100);
         wallets.add(wallet1);

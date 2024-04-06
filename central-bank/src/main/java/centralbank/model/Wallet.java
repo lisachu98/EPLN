@@ -14,7 +14,7 @@ public class Wallet {
     public Wallet() {
         this.balance = 0;
         generateKeyPair();
-        this.accountId = StringUtil.getStringFromKey(publicKey);
+        this.accountId = StringUtil.getStringFromKey(publicKey).substring(0,9);
         System.out.println("Wallet initialized");
     }
 
