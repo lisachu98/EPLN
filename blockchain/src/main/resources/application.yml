@@ -3,6 +3,8 @@ spring:
     name: blockchain-node
 server:
   port: 8081
+  undertow:
+    buffer-size: 4194304
 
 eureka:
   instance:
@@ -13,3 +15,6 @@ eureka:
     service-url:
       defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true
+#logging:
+#  level:
+#    io.undertow: DEBUG

@@ -82,6 +82,10 @@
         <input type="hidden" id="senderPublicKey" name="senderPublicKey" th:value="${publicKey}">
         <button class="btn waves-effect waves-light" type="submit" name="action">Issue funds</button>
     </form>
+    <form id="issueFundsTestForm" action="/blockchain/issueFundsTest" method="post">
+        <input type="number" id="testNumber" name="testNumber" placeholder="Number of test transactions" required>
+        <button type="submit" class="btn waves-effect waves-light">Start the test</button>
+    </form>
     <h1>Mempool</h1>
     <p>Size: <span th:text="${mempoolSize}"></span>/12</p>
     <div th:each="transaction : ${mempool}" class="card-panel">

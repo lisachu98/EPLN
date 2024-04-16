@@ -6,7 +6,7 @@
 </head>
 <body>
 <div class="container">
-    <h1 class="header">Account: <span th:text="${publicKey}"></span></h1>
+    <h1 class="header">Account: <span th:text="${accountId}"></span></h1>
     <p class="caption">Your balance: <span th:text="${balance}"></span></p>
     <form th:action="@{/blockchain/sendFunds}" method="post" class="col s12">
         <div class="input-field">

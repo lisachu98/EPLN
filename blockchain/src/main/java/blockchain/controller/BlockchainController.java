@@ -4,7 +4,6 @@ import blockchain.model.Block;
 import blockchain.model.Transaction;
 import blockchain.service.BlockchainService;
 import blockchain.util.StringUtil;
-import dtos.SendFunds;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +40,18 @@ public class BlockchainController {
     public String sendFunds(@RequestParam("senderPublicKey") String senderPublicKey, @RequestParam("receiverPublicKey") String receiverPublicKey, @RequestParam("privateKey") String privateKey, @RequestParam("amount") float amount) {
         blockchainService.sendFunds(senderPublicKey, privateKey, receiverPublicKey, amount);
         return "redirect:/account";
+    }
+
+    @PostMapping("/blockchain/CSVExport")
+    public String exportCSV() {
+        blockchainService.writeTransactionsToCSV();
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/blockchain/sendFundsTest")
+    public String sendFunds(@RequestParam("testNumber") int n) {
+        blockchainService.sendFundsTest(n);
+        return "redirect:/admin";
     }
 
     @PostMapping("/blockchain/sendBankFunds")
@@ -94,6 +105,7 @@ public class BlockchainController {
     @GetMapping("/account")
     public String account(Model model, HttpSession session) {
         model.addAttribute("publicKey", (String) session.getAttribute("publicKey"));
+        model.addAttribute("accountId", blockchainService.getAccountId((String) session.getAttribute("publicKey")));
         model.addAttribute("balance", blockchainService.getWalletBalance((String) session.getAttribute("publicKey")));
         return "account";
     }

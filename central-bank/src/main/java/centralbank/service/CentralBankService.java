@@ -42,7 +42,6 @@ public class CentralBankService {
         this.name = environment.getProperty("spring.application.name");
         this.nodes = new HashSet<>();
         this.wallet = new Wallet("centralbank");
-        this.wallet.setBalance(1000);
         System.out.println("Central Bank initialized");
     }
 
@@ -111,7 +110,21 @@ public class CentralBankService {
             System.out.println("Money issued to " + bank + " for " + amount + " coins");
         }
     }
-
+    public void issueFundsTest(int n) {
+        Random random = new Random();
+        for (int i = 0; i < n; i++) {
+            ArrayList<String> banksTmp = new ArrayList<>(banks);
+            ArrayList<String> receivers = new ArrayList<>();
+            int howManyBanks = random.nextInt(banks.size());
+            for (int j = 0; j < howManyBanks; j++) {
+                int index = random.nextInt(banksTmp.size());
+                receivers.add(banksTmp.get(index));
+                banksTmp.remove(index);
+            }
+            issueFunds(random.nextInt(10000) + 1, receivers);
+        }
+        template.convertAndSend("/topic/test", "Test funds issued");
+    }
     public void connectToNode(String nodeUrl, String nodeName) {
         if (webSocketClients.containsKey(nodeUrl)) {
             //System.out.println("Already connected to " + nodeUrl);

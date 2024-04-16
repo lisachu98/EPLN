@@ -29,6 +29,12 @@ public class CentralBankController {
         return "redirect:/admin";
     }
 
+    @PostMapping("/blockchain/issueFundsTest")
+    public String sendFundsTest(@RequestParam("testNumber") int n) {
+        centralBankService.issueFundsTest(n);
+        return "redirect:/admin";
+    }
+
     @PostMapping("/authenticate")
     public String authenticate(@RequestParam("publicKey") String publicKey, @RequestParam("privateKey") String privateKey, Model model, RedirectAttributes redirectAttributes, HttpSession session) {
         if (publicKey.equals("admin") && privateKey.equals("admin")) {

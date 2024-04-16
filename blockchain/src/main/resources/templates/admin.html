@@ -107,6 +107,10 @@
         <button class="btn waves-effect waves-light" type="submit" name="action">Send</button>
         <button type="button" onclick="submitToOtherEndpoint(event)" class="btn waves-effect waves-light white-text">Send to another bank</button>
     </form>
+    <form id="issueFundsTestForm" action="/blockchain/sendFundsTest" method="post">
+        <input type="number" id="testNumber" name="testNumber" placeholder="Number of test transactions" required>
+        <button type="submit" class="btn waves-effect waves-light">Start the test</button>
+    </form>
     <h1>Mempool</h1>
     <p>Size: <span th:text="${mempoolSize}"></span>/5</p>
     <div th:each="transaction : ${mempool}" class="card-panel">
@@ -130,6 +134,9 @@
         </table>
     </div>
     <h1>Blockchain</h1>
+    <form id="exportForm" action="/blockchain/CSVExport" method="post" enctype="multipart/form-data">
+        <button type="button" id="exportButton" class="btn waves-effect waves-light">Export CSV</button>
+    </form>
     <div class="blockchain">
         <div th:each="block, stat : ${blockchain}" class="card-panel">
             <div class="block-number">
@@ -186,6 +193,11 @@
             currentBlockData = blockData;
             currentBlock = block;
         });
+    });
+</script>
+<script>
+    document.getElementById('exportButton').addEventListener('click', function() {
+        fetch('/blockchain/CSVExport', { method: 'POST' });
     });
 </script>
 </body>

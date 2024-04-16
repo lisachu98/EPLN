@@ -42,6 +42,9 @@ public class PrintStompSessionHandler extends StompSessionHandlerAdapter {
             case "/topic/centraltransactions":
                 handleCentralTransaction(payload);
                 break;
+            case "/topic/test":
+                handleTest(payload);
+                break;
         }
     }
 
@@ -74,6 +77,10 @@ public class PrintStompSessionHandler extends StompSessionHandlerAdapter {
         }
     }
 
+    private void handleTest(Object payload) {
+        new Thread(() -> blockchainService.sendFundsTest(1500)).start();
+    }
+
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
         session.subscribe("/topic/transactions", this);
@@ -84,5 +91,7 @@ public class PrintStompSessionHandler extends StompSessionHandlerAdapter {
         System.out.println("Subscribed to /topic/centraltransactions");
         session.subscribe("/topic/centralblocks", this);
         System.out.println("Subscribed to /topic/centralblocks");
+        session.subscribe("/topic/test", this);
+        System.out.println("Subscribed to /topic/test");
     }
 }
