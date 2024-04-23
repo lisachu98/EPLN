@@ -58,7 +58,10 @@ public class BlockchainService {
         wallets.add(wallet2);
         wallets.add(wallet3);
         System.out.println(this.name);
-        System.out.println("Wallet 1 pub: " + StringUtil.getStringFromKey(wallet1.getPublicKey()) + " pri: " + StringUtil.getStringFromKey(wallet1.getPrivateKey()));
+        System.out.println("Wallet 1 pub: " + StringUtil.getStringFromKey(this.wallet.getPublicKey()) + " pri: " + StringUtil.getStringFromKey(wallet1.getPrivateKey()));
+        for (Wallet wallet : wallets) {
+            System.out.println("Wallet pub: " + StringUtil.getStringFromKey(wallet.getPublicKey()) + " pri: " + StringUtil.getStringFromKey(wallet.getPrivateKey()));
+        }
         System.out.println("Blockchain initialized");
     }
 
@@ -357,31 +360,29 @@ public class BlockchainService {
         try (FileWriter csvWriter = new FileWriter("blockchain.csv")) {
             csvWriter.append("Transaction ID,Sender,Receiver,Amount\n");
 
+            List<Transaction> allTransactions = new ArrayList<>();
+
             for (Block block : centralchain) {
-                for (Transaction transaction : block.getTransactions()) {
-                    csvWriter.append(transaction.getTransactionId())
-                            .append(',')
-                            .append(transaction.getSender())
-                            .append(',')
-                            .append(transaction.getReceiver())
-                            .append(',')
-                            .append(Float.toString(transaction.getAmount()))
-                            .append('\n');
-                }
+                allTransactions.addAll(block.getTransactions());
             }
 
             for (Block block : blockchain) {
-                for (Transaction transaction : block.getTransactions()) {
-                    csvWriter.append(transaction.getTransactionId())
-                            .append(',')
-                            .append(transaction.getSender())
-                            .append(',')
-                            .append(transaction.getReceiver())
-                            .append(',')
-                            .append(Float.toString(transaction.getAmount()))
-                            .append('\n');
-                }
+                allTransactions.addAll(block.getTransactions());
             }
+
+            allTransactions.sort(Comparator.comparing(Transaction::getTimestamp));
+
+            for (Transaction transaction : allTransactions) {
+                csvWriter.append(transaction.getTransactionId())
+                        .append(',')
+                        .append(transaction.getSender())
+                        .append(',')
+                        .append(transaction.getReceiver())
+                        .append(',')
+                        .append(Float.toString(transaction.getAmount()))
+                        .append('\n');
+            }
+
             csvWriter.flush();
         } catch (IOException e) {
             throw new RuntimeException("Error writing to CSV file", e);

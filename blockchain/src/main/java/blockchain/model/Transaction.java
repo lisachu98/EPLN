@@ -73,4 +73,8 @@ public class Transaction {
     public String getSender() {
         return sender;
     }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
 }

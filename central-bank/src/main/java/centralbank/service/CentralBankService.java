@@ -41,7 +41,8 @@ public class CentralBankService {
         this.mempool = new ArrayList<>();
         this.name = environment.getProperty("spring.application.name");
         this.nodes = new HashSet<>();
-        this.wallet = new Wallet("centralbank");
+        this.wallet = new Wallet("centralbank", 1);
+        System.out.println(StringUtil.getStringFromKey(this.wallet.getPublicKey()));
         System.out.println("Central Bank initialized");
     }
 

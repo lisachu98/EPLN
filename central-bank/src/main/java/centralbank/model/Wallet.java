@@ -24,6 +24,22 @@ public class Wallet {
         System.out.println("Wallet initialized");
     }
 
+    public Wallet(String accountId, int n) {
+        this.balance = 0;
+        this.accountId = accountId;
+        String pub = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEEbbkHdn3quLw1SRoJfWA27hKglgnO52LWHsW0SIRxfgdJXfVwibqSFsj9DolwdqeAZ+dq+wND2chvEcgbZ7/pQ==";
+        String priv = "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCAqXjloUeQ9A9uUc6GqP29tLHs6euCk/tWs7MZQZnE5dA==";
+        pub = pub.substring(0, pub.length() - accountId.length() - 3) + accountId + pub.substring(pub.length() - 3);
+        priv = priv.substring(0, priv.length() - accountId.length() - 3) + accountId + priv.substring(priv.length() - 3);
+        try {
+            this.publicKey = StringUtil.getPublicKeyFromString(pub.replace(" ", "+"));
+            this.privateKey = StringUtil.getPrivateKeyFromString(priv.replace(" ", "+"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Wallet initialized");
+    }
+
     public String getAccountId() {
         return accountId;
     }
