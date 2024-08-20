@@ -88,29 +88,31 @@
 <div class="container">
     <h1 class="header">Account: <span th:text="${name}"></span></h1>
     <p class="caption">Your balance: <span th:text="${balance}"></span></p>
-    <form id="transactionForm" th:action="@{/blockchain/sendFunds}" method="post" class="col s12">
-        <div class="row">
-            <div class="input-field col s12">
-                <input type="text" id="receiverPublicKey" name="receiverPublicKey" class="validate">
-                <label for="receiverPublicKey">Receiver's Public Key:</label>
+    <div class="card-panel">
+        <form id="transactionForm" th:action="@{/blockchain/sendFunds}" method="post" class="col s12">
+            <div class="row">
+                <div class="input-field col s12">
+                    <input type="text" id="receiverPublicKey" name="receiverPublicKey" class="validate">
+                    <label for="receiverPublicKey">Receiver's Public Key:</label>
+                </div>
+                <div class="input-field col s12">
+                    <input type="text" id="privateKey" name="privateKey" class="validate">
+                    <label for="privateKey">Your Private Key:</label>
+                </div>
+                <div class="input-field col s12">
+                    <input type="number" id="amount" name="amount" min="0" class="validate">
+                    <label for="amount">Amount:</label>
+                </div>
             </div>
-            <div class="input-field col s12">
-                <input type="text" id="privateKey" name="privateKey" class="validate">
-                <label for="privateKey">Your Private Key:</label>
-            </div>
-            <div class="input-field col s12">
-                <input type="number" id="amount" name="amount" min="0" class="validate">
-                <label for="amount">Amount:</label>
-            </div>
-        </div>
-        <input type="hidden" id="senderPublicKey" name="senderPublicKey" th:value="${publicKey}">
-        <button class="btn waves-effect waves-light" type="submit" name="action">Send</button>
-        <button type="button" onclick="submitToOtherEndpoint(event)" class="btn waves-effect waves-light white-text">Send to another bank</button>
-    </form>
-    <form id="issueFundsTestForm" action="/blockchain/sendFundsTest" method="post">
-        <input type="number" id="testNumber" name="testNumber" placeholder="Number of test transactions" required>
-        <button type="submit" class="btn waves-effect waves-light">Start the test</button>
-    </form>
+            <input type="hidden" id="senderPublicKey" name="senderPublicKey" th:value="${publicKey}">
+            <button class="btn waves-effect waves-light" type="submit" name="action">Send</button>
+            <button type="button" onclick="submitToOtherEndpoint(event)" class="btn waves-effect waves-light white-text">Send to another bank</button>
+        </form>
+        <form id="issueFundsTestForm" action="/blockchain/sendFundsTest" method="post">
+            <input type="number" id="testNumber" name="testNumber" placeholder="Number of test transactions" required>
+            <button type="submit" class="btn waves-effect waves-light">Start the test</button>
+        </form>
+    </div>
     <h1>Mempool</h1>
     <p>Size: <span th:text="${mempoolSize}"></span>/5</p>
     <div th:each="transaction : ${mempool}" class="card-panel">
