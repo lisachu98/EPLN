@@ -1,6 +1,6 @@
-# Blockchain Project
+# EPLN Project
 
-This project is a blockchain implementation using Java, Spring Boot, and Maven. It includes functionalities for managing transactions, wallets, and blocks within a blockchain network.
+This project is a blockchain-based CBDC implementation using Java, Spring Boot, and Maven. It includes functionalities for managing transactions, wallets, and blocks within a blockchain network.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ These instructions will help you set up and run the project on your local machin
 
 ## Prerequisites
 
-- Java 11 or higher
+- Java 17 or higher
 - Maven 3.6.0 or higher
 - IntelliJ IDEA (recommended IDE)
 
