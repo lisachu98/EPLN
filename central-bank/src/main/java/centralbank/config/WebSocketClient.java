@@ -1,4 +1,4 @@
-package blockchain.config;
+package centralbank.config;
 
 import org.springframework.messaging.converter.StringMessageConverter;
 import org.springframework.messaging.simp.stomp.StompSessionHandler;

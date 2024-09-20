@@ -1,4 +1,4 @@
-package blockchain.model;
+package centralbank.model;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

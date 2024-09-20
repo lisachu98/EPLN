@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Account</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <style>
+        .blockchain {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: clip;
+        }
+        .blockchain .card-panel {
+            flex: 0 0 auto;
+            width: 50px;
+            height: 50px;
+            position: relative;
+            margin-right: 50px;
+        }
+        .blockchain .card-panel::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -40px;
+            border: 10px solid transparent;
+            border-left-color: black;
+            transform: translateY(-50%);
+        }
+        .blockchain .card-panel:last-child::after {
+            content: none; /* Removes the arrow for the last block */
+            position: absolute;
+            top: 50%;
+            right: -40px;
+            border: 10px solid transparent;
+            border-left-color: black;
+            transform: translateY(-50%);
+        }
+        .blockchain .card-panel:hover .block-data {
+            display: none;
+        }
+        .block-data {
+            display: none;
+            position: absolute; /* Changed from absolute to fixed */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Center horizontally */
+            background-color: white;
+            border: 1px solid black;
+            z-index: 1000;
+        }
+        .block-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        #tooltip-container {
+            position: fixed;
+        }
+        .selected {
+            background-color: gray;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="header">Central Bank</h1>
+    <form id="transactionForm" th:action="@{/blockchain/issueFunds}" method="post" class="col s12">
+        <div class="card-panel">
+            <div class="row">
+                <div class="input-field col s12">
+                    <input type="number" id="amount" name="amount" min="0" class="validate">
+                    <label for="amount">Amount:</label>
+                </div>
+                <div class="input-field col s12">
+                    <div th:each="bank, stat : ${banks}">
+                        <label>
+                            <input type="checkbox" id="'bank' + ${stat.index}" name="banks" th:value="${bank}" />
+                            <span th:text="${bank}"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="senderPublicKey" name="senderPublicKey" th:value="${publicKey}">
+            <button class="btn waves-effect waves-light" type="submit" name="action">Issue funds</button>
+    </form>
+        <form id="issueFundsTestForm" action="/blockchain/issueFundsTest" method="post">
+            <input type="number" id="testNumber" name="testNumber" placeholder="Number of test transactions" required>
+            <button type="submit" class="btn waves-effect waves-light">Start the test</button>
+        </form>
+</div>
+    <h1>Mempool</h1>
+    <p>Size: <span th:text="${mempoolSize}"></span>/12</p>
+    <div th:each="transaction : ${mempool}" class="card-panel">
+        <table>
+            <tr>
+                <th>Transaction</th>
+                <td><span th:text="${transaction.transactionId}"></span></td>
+            </tr>
+            <tr>
+                <th>Sender</th>
+                <td><span th:text="${transaction.sender}"></span></td>
+            </tr>
+            <tr>
+                <th>Recipient</th>
+                <td><span th:text="${transaction.receiver}"></span></td>
+            </tr>
+            <tr>
+                <th>Amount</th>
+                <td><span th:text="${transaction.amount}"></span></td>
+            </tr>
+        </table>
+    </div>
+    <h1>Blockchain</h1>
+    <div class="blockchain">
+        <div th:each="block, stat : ${blockchain}" class="card-panel">
+            <div class="block-number">
+                <span>#<span th:text="${stat.index}"></span></span>
+            </div>
+            <div class="block-data">
+                <table>
+                    <tr>
+                        <th>Block</th>
+                        <td><span th:text="${block.hash}"></span></td>
+                    </tr>
+                    <tr class="highlight">
+                        <td colspan="2"></td>
+                    </tr>
+                    <tr>
+                        <th>Previous block</th>
+                        <td><span th:text="${block.previousHash}"></span></td>
+                    </tr>
+                    <tr>
+                        <th>Timestamp</th>
+                        <td><span th:text="${block.getTimestamp}"></span></td>
+                    </tr>
+                    <tr th:each="transaction : ${block.getTransactions}">
+                        <th>Transaction <span th:text="${transaction.transactionId}"></span></th>
+                        <td>
+                            <p>Sender: <span th:text="${transaction.sender}"></span></p>
+                            <p>Recipient: <span th:text="${transaction.receiver}"></span></p>
+                            <p>Amount: <span th:text="${transaction.amount}"></span></p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="tooltip-container"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+    var body = document.querySelector('body');
+    var currentBlock = null;
+    var currentBlockData = null;
+    document.querySelectorAll('.blockchain .card-panel').forEach(function(block) {
+        var blockData = block.querySelector('.block-data');
+        block.addEventListener('click', function(e) {
+            if (currentBlock) {
+                currentBlock.classList.remove('selected');
+            }
+            block.classList.add('selected');
+            if (currentBlockData) {
+                currentBlockData.style.display = 'none';
+            }
+            blockData.style.display = 'block';
+            body.appendChild(blockData);
+            currentBlockData = blockData;
+            currentBlock = block;
+        });
+    });
+</script>
+</body>
+</html>

@@ -4,6 +4,9 @@ import blockchain.config.PrintStompSessionHandler;
 import blockchain.config.WebSocketClient;
 import blockchain.model.Block;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.*;
@@ -23,9 +26,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class BlockchainService {
     private String name;
-    private int port;
-    private ArrayList<Block> blockchain;
+    private ArrayList<Block> blockchain, centralchain;
     private ArrayList<Wallet> wallets;
+    private Wallet wallet;
     private ArrayList<Transaction> mempool;
     @Autowired
     private SimpMessagingTemplate template;
@@ -44,12 +47,21 @@ public class BlockchainService {
         this.mempool = new ArrayList<>();
         this.name = environment.getProperty("spring.application.name");
         this.nodes = new HashSet<>();
-        //this.port = Integer.parseInt(Objects.requireNonNull(environment.getProperty("local.server.port")));
-
-        Wallet wallet1 = new Wallet();
-        wallet1.setBalance(100);
+        this.wallet = new Wallet(this.name.toLowerCase(), 1);
+        this.centralchain = new ArrayList<>();
+        Block genesis = new Block();
+        centralchain.add(genesis);
+        Wallet wallet1 = new Wallet("Max " + this.name.toLowerCase(), 1);
+        Wallet wallet2 = new Wallet("Pawel " + this.name.toLowerCase(), 1);
+        Wallet wallet3 = new Wallet("Jarek " + this.name.toLowerCase(), 1);
         wallets.add(wallet1);
-        System.out.println("Wallet 1 pub: " + StringUtil.getStringFromKey(wallet1.getPublicKey()) + " pri: " + StringUtil.getStringFromKey(wallet1.getPrivateKey()));
+        wallets.add(wallet2);
+        wallets.add(wallet3);
+        System.out.println(this.name);
+        System.out.println("Wallet 1 pub: " + StringUtil.getStringFromKey(this.wallet.getPublicKey()) + " pri: " + StringUtil.getStringFromKey(wallet1.getPrivateKey()));
+        for (Wallet wallet : wallets) {
+            System.out.println("Wallet pub: " + StringUtil.getStringFromKey(wallet.getPublicKey()) + " pri: " + StringUtil.getStringFromKey(wallet.getPrivateKey()));
+        }
         System.out.println("Blockchain initialized");
     }
 
@@ -58,11 +70,14 @@ public class BlockchainService {
         blockchain.add(genesis);
     }
 
-    public void prooffOfAuthority(){
+    public synchronized void proofOfAuthority(){
         long seed = blockchain.get(blockchain.size() - 1).getHash().hashCode();
         Random random = new Random(seed);
-        int randomInt = random.nextInt(nodes.size());
-        List<String> nodesList = new ArrayList<>(nodes);
+        Set<String> nodesTmp = nodes;
+        nodesTmp.remove("CENTRALBANK");
+        List<String> nodesList = new ArrayList<>(nodesTmp);
+        Collections.sort(nodesList);
+        int randomInt = random.nextInt(nodesList.size());
         if (nodesList.get(randomInt).equalsIgnoreCase(name)) {
             System.out.println("I'm the validator!");
             Block block = mintBlock();
@@ -72,9 +87,10 @@ public class BlockchainService {
         else System.out.println("Time for a new block!");
     }
 
-    public Block mintBlock() {
+    public synchronized Block mintBlock() {
         Block block = new Block(blockchain.get(blockchain.size() - 1).getHash());
-        block.setTransactions(mempool);
+        ArrayList<Transaction> blockTransactions = new ArrayList<>(mempool);
+        block.setTransactions(blockTransactions);
         block.mineBlock();
         return block;
     }
@@ -82,19 +98,31 @@ public class BlockchainService {
     public int getMempool() {
         return mempool.size();
     }
+    public ArrayList<Transaction> getMempoolTransactions() {
+        return mempool;
+    }
 
-    public void addBlock(Block block) {
+    public synchronized void addBlock(Block block) {
         blockchain.add(block);
         System.out.println("Block added and blockchain is valid: " + isChainValid());
     }
 
-    public void addTransaction(Transaction transaction) {
+    public void addCentralBlock(Block block) {
+        centralchain.add(block);
+        System.out.println("Central block added and central blockchain is valid: " + isCentralChainValid());
+    }
+
+    public synchronized void addTransaction(Transaction transaction) {
         PublicKey receiver = null;
         try {
             receiver = StringUtil.getPublicKeyFromString(transaction.getReceiver());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+//        if(!transaction.processTransaction()) {
+//            System.out.println("Transaction failed to process. Discarded.");
+//            return;
+//        }
         Wallet receiverWallet = findWalletByPublicKey(receiver);
         if (receiverWallet != null) {
             receiverWallet.credit(transaction.getAmount());
@@ -102,9 +130,16 @@ public class BlockchainService {
         }
         mempool.add(transaction);
         System.out.println("Transaction added");
-        if(mempool.size() == 5){
-            prooffOfAuthority();
+        if(mempool.size() == 100){
+            proofOfAuthority();
             mempool.clear();
+        }
+    }
+
+    public void addCentralTransaction(Transaction transaction) {
+        if (transaction.getReceiver().equalsIgnoreCase(name)) {
+            wallet.credit(transaction.getAmount());
+            System.out.println("Got " + transaction.getAmount() + " coins from " + transaction.getSender());
         }
     }
 
@@ -124,14 +159,73 @@ public class BlockchainService {
         return true;
     }
 
+    public boolean isCentralChainValid() {
+        for (int i = 1; i < centralchain.size(); i++) {
+            Block currentBlock = centralchain.get(i);
+            Block previousBlock = centralchain.get(i - 1);
+
+            if (!currentBlock.getHash().equals(currentBlock.calculateHash())) {
+                return false;
+            }
+
+            if (!previousBlock.getHash().equals(currentBlock.getPreviousHash())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean areBalancesValid() {
+        for (Wallet wallet : wallets) {
+            float balance = 0;
+            for (Block block : blockchain) {
+                for (Transaction transaction : block.getTransactions()) {
+                    if (transaction.getSender().equals(StringUtil.getStringFromKey(wallet.getPublicKey()))) {
+                        balance -= transaction.getAmount();
+                    }
+                    if (transaction.getReceiver().equals(StringUtil.getStringFromKey(wallet.getPublicKey()))) {
+                        balance += transaction.getAmount();
+                    }
+                }
+            }
+            for (Block block : centralchain) {
+                for (Transaction transaction : block.getTransactions()) {
+                    if (transaction.getSender().equals(StringUtil.getStringFromKey(wallet.getPublicKey()))) {
+                        balance -= transaction.getAmount();
+                    }
+                    if (transaction.getReceiver().equals(StringUtil.getStringFromKey(wallet.getPublicKey()))) {
+                        balance += transaction.getAmount();
+                    }
+                }
+            }
+            for (Transaction transaction : mempool) {
+                if (transaction.getSender().equals(StringUtil.getStringFromKey(wallet.getPublicKey()))) {
+                    balance -= transaction.getAmount();
+                }
+                if (transaction.getReceiver().equals(StringUtil.getStringFromKey(wallet.getPublicKey()))) {
+                    balance += transaction.getAmount();
+                }
+            }
+            if (balance != wallet.getBalance()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public Wallet findWalletByPublicKey(PublicKey publicKey) {
+        if (this.wallet.getPublicKey().equals(publicKey)) {
+            return this.wallet;
+        }
+
         return wallets.stream()
                 .filter(wallet -> publicKey.equals(wallet.getPublicKey()))
                 .findFirst()
                 .orElse(null);
     }
 
-    public Transaction sendFunds(String senderPubStr, String senderPriStr, String receiverStr, float amount) {
+    public synchronized Transaction sendFunds(String senderPubStr, String senderPriStr, String receiverStr, float amount) {
         PublicKey receiver;
         PublicKey senderPub;
         PrivateKey senderPri;
@@ -167,6 +261,152 @@ public class BlockchainService {
         return transaction;
     }
 
+    public synchronized Transaction sendBankFunds(String senderPubStr, String senderPriStr, String receiverStr, float amount) {
+        Wallet senderWallet;
+        if (senderPubStr.equals(StringUtil.getStringFromKey(wallet.getPublicKey()))) {
+            senderWallet = wallet;
+            if (senderWallet.getBalance() < amount) {
+                System.out.println("Insufficient funds");
+                return null;
+            }
+        }else return null;
+
+        Transaction transaction = new Transaction(senderPubStr, receiverStr, amount);
+
+        boolean debitSuccessful = senderWallet.debit(amount);
+
+        if (!debitSuccessful) {
+            return null;
+        }
+        String transactionJson = StringUtil.getJson(transaction);
+        template.convertAndSend("/topic/centraltransactions", transactionJson);
+        System.out.println("Bank transaction sent to " + receiverStr + " from " + senderPubStr + " for " + amount + " coins");
+        return transaction;
+    }
+
+    public void sendFundsTest(int n) {
+        String pub = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEEbbkHdn3quLw1SRoJfWA27hKglgnO52LWHsW0SIRxfgdJXfVwibqSFsj9DolwdqeAZ+dq+wND2chvEcgbZ7/pQ==";
+        String priv = "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCAqXjloUeQ9A9uUc6GqP29tLHs6euCk/tWs7MZQZnE5dA==";
+        String[] names = {"Max", "Pawel", "Jarek"};
+        Random random = new Random();
+        for (int i = 0; i < 500; i++) {
+            String name = names[random.nextInt(names.length)] + " " + this.name.toLowerCase();
+            String pubSend = pub.substring(0, pub.length() - this.name.length() - 3) + this.name.toLowerCase() + pub.substring(pub.length() - 3);
+            String privSend = priv.substring(0, priv.length() - this.name.length() - 3) + this.name.toLowerCase() + priv.substring(priv.length() - 3);
+            String pubRec = pub.substring(0, pub.length() - name.length() - 3) + name + pub.substring(pub.length() - 3);
+            pubSend = pubSend.replace(" ", "+");
+            privSend = privSend.replace(" ", "+");
+            pubRec = pubRec.replace(" ", "+");
+            sendFunds(pubSend, privSend, pubRec, random.nextInt(1000) + 1);
+            try {
+                Thread.sleep(random.nextInt(100)+ 50);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        int personalCount = 0;
+        int bankCount = 0;
+        Set<String> nodesTmp = new HashSet<>(nodes);
+        nodesTmp.remove("CENTRALBANK");
+        ArrayList<String> nodes = new ArrayList<>(nodesTmp);
+        Set<String> namesSet = new HashSet<>(Arrays.asList(names));
+        for (int i = 0; i < n; i++) {
+            int chance = random.nextInt(100);
+            if (chance<10){
+                String name = nodes.get(random.nextInt(nodes.size()));
+                String pubSend = pub.substring(0, pub.length() - this.name.length() - 3) + this.name.toLowerCase() + pub.substring(pub.length() - 3);
+                String privSend = priv.substring(0, priv.length() - this.name.length() - 3) + this.name.toLowerCase() + priv.substring(priv.length() - 3);
+                String pubRec = pub.substring(0, pub.length() - name.length() - 3) + name.toLowerCase() + pub.substring(pub.length() - 3);
+                pubSend = pubSend.replace(" ", "+");
+                privSend = privSend.replace(" ", "+");
+                pubRec = pubRec.replace(" ", "+");
+                sendBankFunds(pubSend, privSend, pubRec, random.nextInt(100) + 1);
+                bankCount++;
+            }
+            else {
+                String nameSend;
+                String nameRec;
+                do {
+                    nameSend = names[random.nextInt(names.length)] + " " + this.name.toLowerCase();
+                    nameRec = names[random.nextInt(names.length)] + " " + nodes.get(random.nextInt(nodes.size())).toLowerCase();
+                }while (nameSend.equals(nameRec));
+                String pubSend = pub.substring(0, pub.length() - nameSend.length() - 3) + nameSend + pub.substring(pub.length() - 3);
+                String privSend = priv.substring(0, priv.length() - nameSend.length() - 3) + nameSend + priv.substring(priv.length() - 3);
+                String pubRec = pub.substring(0, pub.length() - nameRec.length() - 3) + nameRec + pub.substring(pub.length() - 3);
+                pubSend = pubSend.replace(" ", "+");
+                privSend = privSend.replace(" ", "+");
+                pubRec = pubRec.replace(" ", "+");
+                sendFunds(pubSend, privSend, pubRec, random.nextInt(10) + 1);
+                personalCount++;
+            }
+            try {
+                Thread.sleep(random.nextInt(100)+ 50);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Sent " + n + " transactions: " + personalCount + " personal and " + bankCount + " bank");
+        System.out.println("Are balances valid: " + areBalancesValid());
+        System.out.println("Blockchain is valid: " + isChainValid());
+    }
+
+    public void writeTransactionsToCSV() {
+        System.out.println("Writing transactions to CSV file");
+        try (FileWriter csvWriter = new FileWriter("blockchain.csv")) {
+            csvWriter.append("Transaction ID,Sender,Receiver,Amount\n");
+
+            List<Transaction> allTransactions = new ArrayList<>();
+
+            for (Block block : centralchain) {
+                allTransactions.addAll(block.getTransactions());
+            }
+
+            for (Block block : blockchain) {
+                allTransactions.addAll(block.getTransactions());
+            }
+
+            allTransactions.sort(Comparator.comparing(Transaction::getTimestamp));
+
+            for (Transaction transaction : allTransactions) {
+                csvWriter.append(transaction.getTransactionId())
+                        .append(',')
+                        .append(transaction.getSender())
+                        .append(',')
+                        .append(transaction.getReceiver())
+                        .append(',')
+                        .append(Float.toString(transaction.getAmount()))
+                        .append('\n');
+            }
+
+            csvWriter.flush();
+        } catch (IOException e) {
+            throw new RuntimeException("Error writing to CSV file", e);
+        }
+    }
+
+    public boolean authenticate(String publicKey, String privateKey) {
+        PublicKey pubKey;
+        PrivateKey priKey;
+        try {
+            pubKey = StringUtil.getPublicKeyFromString(publicKey);
+            priKey = StringUtil.getPrivateKeyFromString(privateKey);
+        } catch (Exception e) {
+            System.out.println("Error processing keys: " + e.getMessage());
+            return false;
+        }
+        for (Wallet wallet : wallets) {
+            if (wallet.getPublicKey().equals(pubKey) && wallet.getPrivateKey().equals(priKey)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void connectToNode(String nodeUrl) {
         if (webSocketClients.containsKey(nodeUrl)) {
             //System.out.println("Already connected to " + nodeUrl);
@@ -186,5 +426,45 @@ public class BlockchainService {
                 connectToNode(nodeUrl);
             }
         }
+    }
+    public String getName() {
+        return name;
+    }
+    public float getWalletBalance(String publicKey) {
+        PublicKey pubKey;
+        try {
+            pubKey = StringUtil.getPublicKeyFromString(publicKey);
+        } catch (Exception e) {
+            System.out.println("Error processing keys: " + e.getMessage());
+            return 0;
+        }
+        Wallet wallet = findWalletByPublicKey(pubKey);
+        if (wallet == null) {
+            return 0;
+        }
+        return wallet.getBalance();
+    }
+    public String getPublicKey() {
+        return wallet.getAccountId();
+    }
+    public float getBalance() {
+        return wallet.getBalance();
+    }
+    public ArrayList<Block> getBlockchain() {
+        return blockchain;
+    }
+    public String getAccountId(String publicKey) {
+        PublicKey pubKey;
+        try {
+            pubKey = StringUtil.getPublicKeyFromString(publicKey);
+        } catch (Exception e) {
+            System.out.println("Error processing keys: " + e.getMessage());
+            return null;
+        }
+        Wallet wallet = findWalletByPublicKey(pubKey);
+        if (wallet == null) {
+            return null;
+        }
+        return wallet.getAccountId();
     }
 }
