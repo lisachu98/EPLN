@@ -8,9 +8,6 @@ This project is a blockchain-based CBDC implementation using Java, Spring Boot, 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Running the Application](#running-the-application)
-- [Endpoints](#endpoints)
-- [Testing](#testing)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Getting Started
@@ -49,3 +46,7 @@ These instructions will help you set up and run the project on your local machin
     ```
 
 3. The application will start on `http://localhost:8080`.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
